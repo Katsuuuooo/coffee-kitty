@@ -14,5 +14,6 @@ import org.mapstruct.Mapping
 @Mapper(componentModel = "spring")
 interface UserDtoMapper : DtoMapper<User, UserDto> {
     @Mapping(target = "role", source = "role", defaultValue = "USER")
+    @Mapping(target = "balance", constant = "0.00")
     override fun toDomain(source: UserDto): User
 }

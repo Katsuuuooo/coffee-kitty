@@ -26,6 +26,15 @@ with a line "Avoid:", which lists words not to use for the concept.
 - **coffee count**: A user's total number of coffees. The number starts at zero when the user is created. Adding a
   coffee raises it by one, and an undo lowers it by one.
   API: `ConsumptionDto.count`. Code: `CoffeeConsumption.count`, `coffee_consumptions.count`.
+- **balance**: The amount credited to a user's account by recorded expenses and payments. The Coffee Kitty also has a
+  physical cash balance, which starts at zero, increases with payments, and an admin can reconcile with the cash in the
+  box. Code: `User.balance`, `CashAccount.balance`.
+- **financial transaction**: A recorded expense, payment, or admin cash adjustment. An expense increases the user's
+  balance; a payment increases both the user's balance and the Coffee Kitty cash balance; a cash adjustment records the
+  difference between the previous and physically counted cash balance. Code: `FinancialTransaction`,
+  `financial_transactions`.
+- **expense type**: A bean purchase or another purchase for the Coffee Kitty. A bean purchase has a bean name and a
+  weight in grams; either type can have a note. Code: `ExpenseType`.
 - **consumption**: The stored record that holds the coffee count of one user and the time of each recent coffee that the
   user did not undo. Adding a coffee drops the times whose grace period has passed. Every user has exactly one such
   record, which `UserService.create` or `UserInternalService.create` creates together with the user.

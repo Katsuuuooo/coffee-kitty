@@ -1,7 +1,10 @@
 package de.seuhd.campuscoffee.data.persistence.repositories
 
 import de.seuhd.campuscoffee.data.persistence.entities.UserEntity
+import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Query
 import java.util.UUID
 
 /**
@@ -18,4 +21,12 @@ interface UserRepository : JpaRepository<UserEntity, UUID> {
      * @param loginName the login name to look up
      */
     fun findByLoginName(loginName: String): UserEntity?
+
+    /** Loads and locks a user row until the current transaction ends.
+     *
+     * @param id the id of the user
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select user from UserEntity user where user.id = :id")
+    fun findForUpdateById(id: UUID): UserEntity?
 }

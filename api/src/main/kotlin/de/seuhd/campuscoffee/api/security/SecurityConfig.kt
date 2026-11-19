@@ -29,7 +29,7 @@ import tools.jackson.databind.json.JsonMapper
 class SecurityConfig {
     /**
      * Returns the filter chain for every request. Creating a user requires an acting user, and so do the requests of
-     * FR-8, correcting a coffee count and listing the corrections of a user, which Coffee Kitty does not implement yet.
+     * FR-8, expense and payment recording, and cash account management.
      *
      * @param http        the builder of the filter chain
      * @param userService the port with which [ActingUserAuthenticationFilter] looks up the acting user
@@ -52,6 +52,10 @@ class SecurityConfig {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.POST, "/api/users").authenticated()
+                it.requestMatchers(HttpMethod.POST, "/api/users/*/expenses").authenticated()
+                it.requestMatchers(HttpMethod.POST, "/api/users/*/payments").authenticated()
+                it.requestMatchers(HttpMethod.PUT, "/api/kitty/balance").authenticated()
+                it.requestMatchers(HttpMethod.GET, "/api/kitty/transactions").authenticated()
                 it.requestMatchers(HttpMethod.PUT, "/api/users/*/consumption").authenticated()
                 it.requestMatchers(HttpMethod.GET, "/api/users/*/consumption/corrections").authenticated()
                 it.anyRequest().permitAll()

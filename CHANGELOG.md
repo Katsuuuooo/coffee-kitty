@@ -7,6 +7,11 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Users can record expenses and admins can record cash payments and reconcile the physical Coffee Kitty balance.
+  The API stores an audit history and validates expense details, payment amounts, and bean purchase weights.
+
 ## [0.2.1] - 2026-11-17
 
 ### Added

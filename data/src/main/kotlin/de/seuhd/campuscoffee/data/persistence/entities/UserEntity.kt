@@ -5,6 +5,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
+import java.math.BigDecimal
 
 /**
  * JPA entity of a user. The companion object holds the names of the unique constraints that the migration
@@ -29,6 +30,9 @@ class UserEntity : Entity() {
     @field:Enumerated(EnumType.STRING)
     @field:Column(name = "role")
     var role: Role? = null
+
+    @field:Column(name = "balance", precision = 12, scale = 2)
+    var balance: BigDecimal? = null
 
     companion object {
         /** Name of the unique constraint on the login name. */

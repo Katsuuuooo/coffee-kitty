@@ -7,14 +7,15 @@
 
 Coffee Kitty counts the coffees that the users in a group drink from a shared coffee machine. The group buys new coffee
 beans from a shared cash box, the kitty. A user can also buy coffee with their own money and declare the purchase as an
-expense. So far, the app is a minimal REST API that stores users and their coffee counts, which change by one coffee at
-a time. Prices, payments, expenses, a user interface, and authentication are still missing.
+expense. The app is a minimal REST API that stores users and their coffee counts, records expenses and cash payments,
+and tracks the Coffee Kitty's cash balance. Prices per cup, a user interface, and real authentication are still missing.
 
 Coffee Kitty is the running example of a software engineering course at Heidelberg University. Students first see the
 app in the lectures on agentic software engineering and extend it over the semester, for example with a price per cup
-and a balance for each user. Coffee Kitty has the same architecture as the coffee app of [SE@UHD](https://se-uhd.de/),
-the Software Engineering Group at Heidelberg University. Both apps have four backend modules, ports and adapters, and
-layer rules that ArchUnit enforces, but Coffee Kitty has only two entities: users and their consumptions.
+and a price per cup. Coffee Kitty has the same architecture as the coffee app of [SE@UHD](https://se-uhd.de/), the
+Software Engineering Group at Heidelberg University. Both apps have four backend modules, ports and adapters, and
+layer rules that ArchUnit enforces. Coffee Kitty stores users and consumptions, a singleton cash account, and financial
+transaction history.
 
 ## Users and coffee counts
 
@@ -154,6 +155,20 @@ The paths in this section are relative to `/api`, and Swagger UI documents every
 to run in the `dev` profile on port 8081. Because the ids change with every restart, a command that needs an id first
 looks up the id of the fixture user `jane_doe` with `python3`. A request with an unknown login name in the header
 `X-Acting-User` gets 401 Unauthorized on every route.
+
+`POST /users/{userId}/expenses` records an expense for the acting user and increases their balance. A bean purchase
+uses `{"amount":12.50,"type":"BEANS","beanName":"Arabica","weightGrams":500}`; another purchase uses
+`{"amount":12.50,"type":"OTHER","note":"Filters"}`. Amounts must be between 0.01 and 1,000.00 EUR. A bean
+purchase needs a bean name and a weight from 100 to 1,000 grams. The optional note has at most 500 characters. The
+acting user must be the user in the path.
+
+`POST /users/{userId}/payments` records a cash payment made by that user. Only an admin may record a payment. The
+amount must be between 0.01 and 1,000.00 EUR. A successful payment increases both the user's balance and the cash
+balance of the Coffee Kitty.
+
+`GET /kitty/balance` returns the current physical cash balance. It starts at 0.00 EUR. `PUT /kitty/balance` lets an
+admin set it to the physically counted amount, including 0.00 EUR. The API records the difference as a cash
+adjustment. `GET /kitty/transactions` returns the transaction history to an admin.
 
 `GET /users` returns all users as a JSON array, ordered by login name:
 

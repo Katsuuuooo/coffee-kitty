@@ -1,23 +1,31 @@
 package de.seuhd.campuscoffee.domain.implementation
 
+import de.seuhd.campuscoffee.domain.model.CashAccount
+import de.seuhd.campuscoffee.domain.ports.data.CashAccountDataService
 import de.seuhd.campuscoffee.domain.ports.data.CoffeeConsumptionDataService
+import de.seuhd.campuscoffee.domain.ports.data.FinancialTransactionDataService
 import de.seuhd.campuscoffee.domain.ports.data.UserDataService
 import de.seuhd.campuscoffee.domain.ports.internal.DataResetService
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 
 /**
- * Domain implementation of [DataResetService]. It deletes all consumptions and then all users, because every
- * consumption references a user. Delete the rows of a new entity before the rows of the entities that the new entity
+ * Domain implementation of [DataResetService]. It deletes transaction history, resets the cash balance, then deletes
+ * consumptions and users in foreign-key order. Delete the rows of a referencing entity before the rows that it
  * references.
  */
 @Service
 class DataResetServiceImpl(
     private val coffeeConsumptionDataService: CoffeeConsumptionDataService,
-    private val userDataService: UserDataService
+    private val userDataService: UserDataService,
+    private val cashAccountDataService: CashAccountDataService,
+    private val financialTransactionDataService: FinancialTransactionDataService
 ) : DataResetService {
     override fun clearAll() {
         log.warn { "Clearing all data." }
+        financialTransactionDataService.clear()
+        cashAccountDataService.upsert(CashAccount(CashAccount.ID, BigDecimal("0.00")))
         coffeeConsumptionDataService.clear()
         userDataService.clear()
     }

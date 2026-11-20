@@ -28,9 +28,10 @@ transaction history.
 - Within the grace period of 5 minutes after adding a coffee, a user can undo it, which lowers the coffee count by one.
   After an undo, the coffee before is the most recent coffee, which the user can undo while it is within its own grace
   period. The requirement is FR-3 in `requirements/FR-3-undo-coffee.md`.
-- Every user has a role, `USER` or `ADMIN`. Only an admin may create a user. Coffee Kitty has no authentication yet: The
-  header `X-Acting-User` of a request contains the login name of the acting user, and any client can act as any user.
-  The fixture user `jane_doe` is an admin.
+- Every user has a role, `USER` or `ADMIN`. Only an admin may create a user or correct a coffee count. A correction
+  requires a reason note and is recorded with the previous and new count and the admin. Coffee Kitty has no real
+  authentication yet: The header `X-Acting-User` contains the acting user's login name, and any client can act as any
+  user. The fixture user `jane_doe` is an admin.
 - The REST API accepts and returns only JSON.
 - A Spring Boot backend in Kotlin stores the users and their coffee counts in PostgreSQL through Jakarta Persistence
   (JPA). Flyway migrations define the database schema.
@@ -237,7 +238,27 @@ USER_ID=$(curl -s http://localhost:8081/api/users |
 curl --request POST http://localhost:8081/api/users/$USER_ID/consumption/undo
 ```
 
-The three consumption endpoints return 404 Not Found for an unknown user. An error response has a JSON body with the
+`PUT /users/{userId}/consumption` corrects a user's count. Only an admin may correct it, the `total` must be
+nonnegative, and `note` must be nonblank. The response contains the corrected count:
+
+```shell
+USER_ID=$(curl -s http://localhost:8081/api/users |
+  python3 -c 'import json, sys; print(next(u["id"] for u in json.load(sys.stdin) if u["loginName"] == "maxmustermann"))')
+curl --request PUT --header "X-Acting-User: jane_doe" --header "Content-Type: application/json" \
+  --data '{"total":2,"note":"Double tap on 16.11."}' \
+  http://localhost:8081/api/users/$USER_ID/consumption
+```
+
+`GET /users/{userId}/consumption/corrections` returns the correction history, newest first. Each record contains
+`countBefore`, `countAfter`, `note`, and `adminLoginName`:
+
+```shell
+USER_ID=$(curl -s http://localhost:8081/api/users |
+  python3 -c 'import json, sys; print(next(u["id"] for u in json.load(sys.stdin) if u["loginName"] == "maxmustermann"))')
+curl --header "X-Acting-User: jane_doe" http://localhost:8081/api/users/$USER_ID/consumption/corrections
+```
+
+The consumption endpoints return 404 Not Found for an unknown user. An error response has a JSON body with the
 fields `errorCode`, `message`, `statusCode`, `statusMessage`, `timestamp`, and `path`. For a domain exception,
 `errorCode` is the class name of the exception: `NotFoundException`, `DuplicationException`, `ConflictException`,
 `ForbiddenException`, or `ValidationException`. For any other error, `errorCode` is the reason phrase of the status

@@ -9,6 +9,9 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Admins can correct a user's coffee count with a reason note. Coffee Kitty stores the before and after counts, target
+  user, note, and admin in a correction history. Lowering the count also removes the newest coffee times, so a later
+  undo cannot undo an older, expired coffee.
 - Users can record expenses and admins can record cash payments and reconcile the physical Coffee Kitty balance.
   The API stores an audit history and validates expense details, payment amounts, and bean purchase weights.
 

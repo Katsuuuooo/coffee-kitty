@@ -59,6 +59,12 @@ class CucumberConsumptionSteps(
         addCoffeeSuccessfully()
     }
 
+    /** Returns the login name selected by a Given step in this scenario. */
+    fun currentLoginName(): String = loginName
+
+    /** Returns the status code of the most recent request made by a When step in this scenario. */
+    fun currentStatus(): Int = lastStatus
+
     @When("the user adds a coffee")
     fun theUserAddsACoffee() {
         lastStatus = ConsumptionRequests.addCoffee(loginName)

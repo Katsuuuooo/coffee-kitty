@@ -3,6 +3,7 @@ package de.seuhd.campuscoffee.domain.implementation
 import de.seuhd.campuscoffee.domain.model.CashAccount
 import de.seuhd.campuscoffee.domain.ports.data.CashAccountDataService
 import de.seuhd.campuscoffee.domain.ports.data.CoffeeConsumptionDataService
+import de.seuhd.campuscoffee.domain.ports.data.CoffeeCorrectionDataService
 import de.seuhd.campuscoffee.domain.ports.data.FinancialTransactionDataService
 import de.seuhd.campuscoffee.domain.ports.data.UserDataService
 import de.seuhd.campuscoffee.domain.ports.internal.DataResetService
@@ -18,6 +19,7 @@ import java.math.BigDecimal
 @Service
 class DataResetServiceImpl(
     private val coffeeConsumptionDataService: CoffeeConsumptionDataService,
+    private val coffeeCorrectionDataService: CoffeeCorrectionDataService,
     private val userDataService: UserDataService,
     private val cashAccountDataService: CashAccountDataService,
     private val financialTransactionDataService: FinancialTransactionDataService
@@ -26,6 +28,7 @@ class DataResetServiceImpl(
         log.warn { "Clearing all data." }
         financialTransactionDataService.clear()
         cashAccountDataService.upsert(CashAccount(CashAccount.ID, BigDecimal("0.00")))
+        coffeeCorrectionDataService.clear()
         coffeeConsumptionDataService.clear()
         userDataService.clear()
     }

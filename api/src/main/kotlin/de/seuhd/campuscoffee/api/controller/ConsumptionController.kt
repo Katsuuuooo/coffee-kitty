@@ -1,9 +1,14 @@
 package de.seuhd.campuscoffee.api.controller
 
+import de.seuhd.campuscoffee.api.dtos.CoffeeCorrectionDto
+import de.seuhd.campuscoffee.api.dtos.CoffeeCountCorrectionDto
 import de.seuhd.campuscoffee.api.dtos.ConsumptionDeltaDto
 import de.seuhd.campuscoffee.api.dtos.ConsumptionDto
+import de.seuhd.campuscoffee.api.mapper.CoffeeCorrectionDtoMapper
 import de.seuhd.campuscoffee.api.mapper.ConsumptionDtoMapper
+import de.seuhd.campuscoffee.api.security.CurrentUserProvider
 import de.seuhd.campuscoffee.domain.ports.api.CoffeeConsumptionService
+import de.seuhd.campuscoffee.domain.ports.api.CoffeeCorrectionService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -12,6 +17,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -27,7 +33,10 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody as ApiRequestBody
 @RequestMapping("/users/{userId}/consumption")
 class ConsumptionController(
     private val coffeeConsumptionService: CoffeeConsumptionService,
-    private val consumptionDtoMapper: ConsumptionDtoMapper
+    private val coffeeCorrectionService: CoffeeCorrectionService,
+    private val consumptionDtoMapper: ConsumptionDtoMapper,
+    private val coffeeCorrectionDtoMapper: CoffeeCorrectionDtoMapper,
+    private val currentUserProvider: CurrentUserProvider
 ) {
     /**
      * Returns the coffee count of the user with [userId].
@@ -62,6 +71,45 @@ class ConsumptionController(
         val updated = coffeeConsumptionService.applyDelta(userId, requireNotNull(dto.delta))
         return ResponseEntity.ok(consumptionDtoMapper.toDto(updated))
     }
+
+    /**
+     * Corrects the coffee count of the user with [userId] and returns the updated count. Only an admin may correct a
+     * count, and each correction needs a nonblank note.
+     *
+     * @param userId the id of the user
+     * @param dto the new total and the reason for the correction
+     */
+    @Operation(summary = "Correct a user's coffee count as an admin.")
+    @PutMapping("")
+    fun correct(
+        @Parameter(description = "Unique identifier of the user.", required = true)
+        @PathVariable userId: UUID,
+        @ApiRequestBody(description = "The corrected total and a nonblank reason.", required = true)
+        @RequestBody
+        @Valid dto: CoffeeCountCorrectionDto
+    ): ResponseEntity<ConsumptionDto> {
+        val updated =
+            coffeeCorrectionService.correctCoffeeCount(
+                currentUserProvider.currentUser(),
+                userId,
+                requireNotNull(dto.total),
+                dto.note
+            )
+        return ResponseEntity.ok(consumptionDtoMapper.toDto(updated))
+    }
+
+    /**
+     * Returns the audit records of the user with [userId], newest first.
+     *
+     * @param userId the id of the user
+     */
+    @Operation(summary = "Get the correction history of a user's coffee count.")
+    @GetMapping("/corrections")
+    fun corrections(
+        @Parameter(description = "Unique identifier of the user.", required = true)
+        @PathVariable userId: UUID
+    ): ResponseEntity<List<CoffeeCorrectionDto>> =
+        ResponseEntity.ok(coffeeCorrectionService.corrections(userId).map(coffeeCorrectionDtoMapper::toDto))
 
     /**
      * Undoes the most recent coffee of the user with [userId] and returns the new coffee count. The domain throws a
